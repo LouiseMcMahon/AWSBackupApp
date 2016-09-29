@@ -1,5 +1,6 @@
 import json
 import os
+import errno
 
 
 class ConfigFile():
@@ -9,13 +10,22 @@ class ConfigFile():
     self.config_file_path contains the path to the config file
     '''
 
-    def __init__(self):
-        self.config_file_path = os.path.join(os.getenv('APPDATA'), 'amazon-backup', 'confg.json')
+    def __init__(self,config_file_path = None):
+
+        if config_file_path:
+            self.config_file_path = config_file_path
+        else:
+            self.config_file_path = os.path.join(os.getenv('APPDATA'), 'amazon-backup', 'confg.json')
+
         if os.path.isfile(self.config_file_path):
             with open(self.config_file_path) as data_file:
                 self.config = json.load(data_file)
         else:
-            os.makedirs(os.path.join(os.getenv('APPDATA'),'amazon-backup'))
+            try:
+                os.makedirs(os.path.dirname(self.config_file_path))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
             with open(self.config_file_path, 'w') as outfile:
                 json.dump([], outfile)
                 self.config = []
