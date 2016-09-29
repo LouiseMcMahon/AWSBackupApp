@@ -5,7 +5,8 @@ class AWS():
         self.api_key = api_key
         self.secret_key = secret_key
 
-    def get_s3_client(self):
+    @property
+    def s3_client(self):
 
         if self.api_key and self.secret_key:
             client =  boto3.client(
