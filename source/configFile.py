@@ -17,9 +17,22 @@ class ConfigFile():
         else:
             self.config_file_path = os.path.join(os.getenv('APPDATA'), 'amazon-backup', 'confg.json')
 
+        #hack to create the file if it dosent exist
+        #TODO this should be dont in a better way
+        self.config
+
+    #when called overwrites what ever is at self.config_file_path with self.config
+    def update_config_file(self):
+        with open(self.config_file_path, 'w') as config_file:
+            config_file.truncate(0)
+            json.dump(self.config, config_file)
+
+
+    @property
+    def config(self):
         if os.path.isfile(self.config_file_path):
             with open(self.config_file_path) as data_file:
-                self.config = json.load(data_file)
+                return json.load(data_file)
         else:
             try:
                 os.makedirs(os.path.dirname(self.config_file_path))
@@ -28,10 +41,9 @@ class ConfigFile():
                     raise
             with open(self.config_file_path, 'w') as outfile:
                 json.dump([], outfile)
-                self.config = []
+                return []
 
-    #when called overwrites what ever is at self.config_file_path with self.config
-    def update_config_file(self):
-        with open(self.config_file_path, 'w') as config_file:
-            config_file.truncate(0)
-            json.dump(self.config, config_file)
+    @config.setter
+    def folders_to_sync(self,config):
+        self.config = config
+        self.update_config_file()

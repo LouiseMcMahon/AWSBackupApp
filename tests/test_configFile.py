@@ -19,10 +19,14 @@ class TestConfigFile(TestCase):
         create_file_loc = os.path.join(os.getcwd(),"init_config_2_test.json")
         self.files_to_remove.append(create_file_loc)
 
+        #create a config file from scratch
         config_file = ConfigFile(create_file_loc)
         self.assertEqual(config_file.config_file_path,
                          create_file_loc,
                          "config file location not set correctly when input as a variable")
+
+        self.assertTrue (os.path.isfile(config_file.config_file_path),
+                         "config file not created")
 
         config_file = ConfigFile()
         self.assertEqual(config_file.config_file_path,
