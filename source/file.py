@@ -3,16 +3,16 @@ import platform
 
 class file():
 
-    def creation_date(path_to_file):
+    def creationDate(pathToFile):
         """
         Try to get the date that a file was created, falling back to when it was
         last modified if that isn't possible.
         See http://stackoverflow.com/a/39501288/1709587 for explanation.
         """
         if platform.system() == 'Windows':
-            return os.path.getctime(path_to_file)
+            return os.path.getctime(pathToFile)
         else:
-            stat = os.stat(path_to_file)
+            stat = os.stat(pathToFile)
             try:
                 return stat.st_birthtime
             except AttributeError:
