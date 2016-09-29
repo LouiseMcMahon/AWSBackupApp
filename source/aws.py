@@ -1,17 +1,17 @@
 import boto3
 
-class aws():
-    def __init__(self,apiKey = None,secretKey = None):
-        self.apiKey = apiKey
-        self.secretKey = secretKey
+class AWS():
+    def __init__(self, api_key = None, secret_key = None):
+        self.api_key = api_key
+        self.secret_key = secret_key
 
-    def getS3Client(self):
+    def get_s3_client(self):
 
-        if self.apiKey and self.secretKey:
+        if self.api_key and self.secret_key:
             client =  boto3.client(
                 's3',
-                aws_access_key_id=self.apiKey,
-                aws_secret_access_key=self.secretKey
+                aws_access_key_id=self.api_key,
+                aws_secret_access_key=self.secret_key
             )
         else:
             client = boto3.client(
@@ -20,9 +20,9 @@ class aws():
 
         return client
 
-    def createBucket(self,bucketName):
+    def createBucket(self,bucket_name):
         pass
 
-    def addBucketFolder(self,folderName,lifecycle = None):
+    def addBucketFolder(self,folder_name,lifecycle = None):
         pass
 

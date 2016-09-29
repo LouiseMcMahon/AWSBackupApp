@@ -1,4 +1,4 @@
-from configFile import configFile
+from configFile import ConfigFile
 
-configFile = configFile()
+configFile = ConfigFile()
 print configFile.config
