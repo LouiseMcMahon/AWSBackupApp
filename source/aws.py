@@ -1,6 +1,6 @@
 import boto3
 
-class AWS():
+class AWS(object):
     def __init__(self, api_key = None, secret_key = None):
         self.api_key = api_key
         self.secret_key = secret_key

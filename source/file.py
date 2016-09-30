@@ -1,7 +1,7 @@
 import os
 import platform
 
-class File():
+class File(object):
 
     def creationDate(path_to_file):
         """
