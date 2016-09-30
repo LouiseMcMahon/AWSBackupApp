@@ -25,6 +25,7 @@ class TestConfigFile(TestCase):
                          create_file_loc,
                          "config file location not set correctly when input as a variable")
 
+        config_file.config
         self.assertTrue (os.path.isfile(config_file.config_file_path),
                          "config file not created")
 

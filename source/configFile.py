@@ -6,7 +6,7 @@ import errno
 class ConfigFile(object):
 
     '''
-    self.config contains the whole config file as a json array
+    self.config contains the whole config file as a json array and will update the config file if changed
     self.config_file_path contains the path to the config file
     '''
 
@@ -17,10 +17,6 @@ class ConfigFile(object):
             self.config_file_path = config_file_path
         else:
             self.config_file_path = os.path.join(os.getenv('APPDATA'), 'amazon-backup', 'confg.json')
-
-        #hack to create the file if it dosent exist
-        #TODO this should be dont in a better way
-        self.config
 
     @property
     def config(self):
