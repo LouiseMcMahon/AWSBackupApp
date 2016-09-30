@@ -48,5 +48,5 @@ class ConfigFile(object):
 
         #update file
         with open(self.config_file_path, 'w') as config_file:
-            #config_file.truncate(0)
+            config_file.truncate(0)
             json.dump(config, config_file)
