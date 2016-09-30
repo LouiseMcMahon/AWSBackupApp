@@ -3,7 +3,7 @@ import os
 import errno
 
 
-class ConfigFile():
+class ConfigFile(object):
 
     '''
     self.config contains the whole config file as a json array
@@ -11,6 +11,7 @@ class ConfigFile():
     '''
 
     def __init__(self,config_file_path = None):
+        self.__config_cache = None
 
         if config_file_path:
             self.config_file_path = config_file_path
@@ -21,18 +22,18 @@ class ConfigFile():
         #TODO this should be dont in a better way
         self.config
 
-    #when called overwrites what ever is at self.config_file_path with self.config
-    def update_config_file(self):
-        with open(self.config_file_path, 'w') as config_file:
-            config_file.truncate(0)
-            json.dump(self.config, config_file)
-
-
     @property
     def config(self):
-        if os.path.isfile(self.config_file_path):
+        #if cache return
+        if self.__config_cache != None:
+            return self.__config_cache
+
+        #if not cached and file exists get it and set cache
+        elif os.path.isfile(self.config_file_path):
             with open(self.config_file_path) as data_file:
-                return json.load(data_file)
+                self.__config_cache = json.load(data_file)
+            return self.__config_cache
+        #if file does not exist create it
         else:
             try:
                 os.makedirs(os.path.dirname(self.config_file_path))
@@ -41,9 +42,15 @@ class ConfigFile():
                     raise
             with open(self.config_file_path, 'w') as outfile:
                 json.dump([], outfile)
-                return []
+                self.__config_cache = []
+                return self.__config_cache
 
     @config.setter
-    def folders_to_sync(self,config):
-        self.config = config
-        self.update_config_file()
+    def config(self,config):
+        #set cache
+        self.__config_cache = config
+
+        #update file
+        with open(self.config_file_path, 'w') as config_file:
+            #config_file.truncate(0)
+            json.dump(config, config_file)

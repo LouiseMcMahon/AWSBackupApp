@@ -44,7 +44,6 @@ class TestConfigFile(TestCase):
 
         config_file = ConfigFile(create_file_loc)
         config_file.config = ["updated test file"]
-        config_file.update_config_file()
 
         with open(create_file_loc) as data_file:
             config_file_contents = json.load(data_file)
