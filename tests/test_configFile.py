@@ -39,7 +39,7 @@ class TestConfigFile(TestCase):
                          ["this is a test file"],
                          "config not retrived corectly")
 
-    def test_update_config_file(self):
+    def test_config_property(self):
         create_file_loc = os.path.join(os.getcwd(), "init_config_2_test.json")
         self.files_to_remove.append(create_file_loc)
 
