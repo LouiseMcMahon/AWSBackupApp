@@ -15,8 +15,8 @@ class TestConfigFile(TestCase):
                 os.remove(file)
 
     def test___init__(self):
-        read_file_loc = os.path.join(os.getcwd(), "init_config_1_test.json")
-        create_file_loc = os.path.join(os.getcwd(),"init_config_2_test.json")
+        read_file_loc = os.path.join(os.getcwd(),"test_files", "init_config_1_test.json")
+        create_file_loc = os.path.join(os.getcwd(),"test_files","init_config_2_test.json")
         self.files_to_remove.append(create_file_loc)
 
         #create a config file from scratch
