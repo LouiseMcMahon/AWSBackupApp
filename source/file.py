@@ -3,9 +3,14 @@ from pprint import pprint
 
 class File(object):
 
-    def __init__(self,file_path):
-        self.path = File.normalise_path(file_path)
+    def __init__(self,path,path_parent,bucket_name,bucket_path):
+        import os
+        self.path = File.normalise_path(path)
         self.name = File.path_leaf(self.path)
+        self.path_parent = File.normalise_path(path_parent)
+        self.path_relative = os.path.relpath(self.path,self.path_parent)
+        self.bucket_name = bucket_name
+        self.s3_key = bucket_path+ self.path_relative.replace('\\', '/')
 
     def __str__(self):
         return self.path
@@ -44,6 +49,36 @@ class File(object):
         else:
             return self.timestamp_created
 
+    def upload(self,overwrite_if_older = False):
+        from aws import AWS
+        from datetime import datetime
+        import time
+        import botocore
+
+        aws = AWS()
+        object = aws.s3_object(self.bucket_name,self.s3_key)
+
+        s3_last_modified = False
+        try:
+            s3_last_modified = object.last_modified
+        except botocore.exceptions.ClientError as e:
+            error_code = int(e.response['Error']['Code'])
+            if error_code == 404:
+                print str(self) + ": new uploading"
+                object.upload_file(self.path)
+        else:
+            if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified and overwrite_if_older == False:
+                print str(self)+ ": out of date uploading"
+                object.upload_file(self.path)
+            elif overwrite_if_older == True:
+                if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified:
+                    print str(self) + ": out of date uploading"
+                else:
+                    print str(self) + ": being overwriten"
+                object.upload_file(self.path)
+            else:
+                print str(self) + ": older than backup skipping"
+
     @staticmethod
     def scan_folder(folder_path,recursive = True,ignore_paths = []):
         import os
@@ -61,13 +96,13 @@ class File(object):
                 #if path not in ingnore the else will run
                 else:
                     for filename in sub_files:
-                        files_to_return.append(File(os.path.join(current_dir, filename)))
+                        files_to_return.append(os.path.join(current_dir, filename))
 
         else:
             files_in_folder = os.listdir(folder_path)
             for file in files_in_folder:
                 if os.path.isfile(os.path.join(folder_path,file)):
-                    files_to_return.append(File(os.path.join(folder_path,file)))
+                    files_to_return.append(os.path.join(folder_path,file))
 
         return files_to_return
 

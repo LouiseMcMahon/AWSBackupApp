@@ -10,6 +10,9 @@ class TestAWS(TestCase):
                               BaseClient,
                               "S3 client not being set correctly")
 
+    def test_s3_object(self):
+        self.fail()
+
     def test_createBucket(self):
         self.fail()
 
