@@ -85,14 +85,22 @@ if args.quiet != True:
     logger.addHandler(handler)
 
 # create error file handler and set level to error
-handler = logging.FileHandler(os.path.join(log_folder, "error.log"), "w", encoding=None, delay="true")
+if args.errorlog:
+    error_log_path = args.errorlog
+else:
+    error_log_path = os.path.join(log_folder, "error.log")
+handler = logging.FileHandler(error_log_path, "w", encoding=None, delay="true")
 handler.setLevel(logging.ERROR)
 formatter = logging.Formatter(format_string)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # create debug file handler and set level to debug
-handler = logging.FileHandler(os.path.join(log_folder, "all.log"), "w")
+if args.alllog:
+    all_log_path = args.alllog
+else:
+    all_log_path = os.path.join(log_folder, "all.log")
+handler = logging.FileHandler(all_log_path, "w")
 handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter(format_string)
 handler.setFormatter(formatter)
