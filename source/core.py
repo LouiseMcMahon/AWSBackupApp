@@ -9,12 +9,11 @@ import os
 
 def main():
     config = Config()
+
+    #setup logging
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-
     format_string = "[%(levelname)s] [%(name)s] [%(asctime)s] %(message)s"
-
-    os.getenv('APPDATA'), 'amazon-backup'
 
     # create console handler and set level to info
     handler = logging.StreamHandler()
@@ -44,14 +43,14 @@ def main():
     logging.info('Started')
 
     for folder in config.config['folders']:
-        # pprint(folder)
-
         aws = AWS()
 
         files = scan_folder(folder["path"],True,folder["ignore"])
         for file_path in files:
             file = File(file_path,folder["path"],folder["bucket_name"],folder['bucket_path'])
             file.upload()
+
+    logging.info('Finished')
 
 if __name__ == '__main__':
     sys.exit(main())
