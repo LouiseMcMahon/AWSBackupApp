@@ -5,9 +5,9 @@ class File(object):
 
     def __init__(self,path,path_parent,bucket_name,bucket_path):
         import os
-        self.path = File.normalise_path(path)
+        self.path = File.path_normalise(path)
         self.name = File.path_leaf(self.path)
-        self.path_parent = File.normalise_path(path_parent)
+        self.path_parent = File.path_normalise(path_parent)
         self.path_relative = os.path.relpath(self.path,self.path_parent)
         self.bucket_name = bucket_name
         self.s3_key = bucket_path+ self.path_relative.replace('\\', '/')
@@ -83,13 +83,13 @@ class File(object):
     def scan_folder(folder_path,recursive = True,ignore_paths = []):
         import os
 
-        folder_path = File.normalise_path(folder_path)
+        folder_path = File.path_normalise(folder_path)
         files_to_return = []
 
         if recursive:
             for current_dir, sub_dirs, sub_files in os.walk(folder_path):
                 for path in ignore_paths:
-                    path = File.normalise_path(path)
+                    path = File.path_normalise(path)
                     if path in current_dir:
                         break
 
@@ -107,7 +107,7 @@ class File(object):
         return files_to_return
 
     @staticmethod
-    def normalise_path(path):
+    def path_normalise(path):
         """
         function to lowercase and normalise paths removing extraneous ../ etc
         :param path string: path to be normalised
