@@ -128,3 +128,19 @@ def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
         
+def delete_none_existing_files(bucket_name,s3_path,existsing_files):
+    from aws import AWS
+    import logging
+    aws = AWS()
+    bucket = aws.s3_bucket(bucket_name)
+
+    all_objects = bucket.objects.all()
+    for object in all_objects:
+        if s3_path in object.key:
+            for existsing_file in existsing_files:
+                if object.key == existsing_file.s3_key:
+                    logging.info(str(object.key) + ": exists on local leaving on s3")
+                    break
+            else:
+                logging.info(str(object.key) + ": does not exist on local deleting from s3")
+                object.delete()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from config import Config
-from file import File,scan_folder
+from file import File,scan_folder,delete_none_existing_files
 from pprint import pprint
 from aws import AWS
 import sys
@@ -10,14 +10,20 @@ import platform
 import argparse
 
 def upload(overwrite):
-    logging.info('Started')
+    logging.info('Uploading files to S3')
     for folder in config.config['folders']:
         aws = AWS()
 
         files = scan_folder(folder["path"],True,folder["ignore"])
+        file_objects = []
         for file_path in files:
             file = File(file_path,folder["path"],folder["bucket_name"],folder['bucket_path'])
             file.upload(overwrite)
+            file_objects.append(file)
+
+    logging.info('Deleting files from S3')
+    delete_none_existing_files(folder["bucket_name"],folder['bucket_path'],file_objects)
+
     logging.info('Finished')
 
 #setup argument parsing
