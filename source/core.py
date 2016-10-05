@@ -6,6 +6,7 @@ from aws import AWS
 import sys
 import logging
 import os
+import platform
 
 def main():
     config = Config()
@@ -14,6 +15,11 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     format_string = "[%(levelname)s] [%(name)s] [%(asctime)s] %(message)s"
+    if platform.system() == 'Windows':
+        log_folder = os.path.join(os.getenv('APPDATA'), 'amazon-backup')
+    else:
+        log_folder = os.path.join(os.path.expanduser("~"), ".local", "share", 'amazon-backup')
+
 
     # create console handler and set level to info
     handler = logging.StreamHandler()
@@ -23,14 +29,14 @@ def main():
     logger.addHandler(handler)
 
     # create error file handler and set level to error
-    handler = logging.FileHandler(os.path.join(os.getenv('APPDATA'), 'amazon-backup', "error.log"), "w", encoding=None, delay="true")
+    handler = logging.FileHandler(os.path.join(log_folder, "error.log"), "w", encoding=None, delay="true")
     handler.setLevel(logging.ERROR)
     formatter = logging.Formatter(format_string)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
     # create debug file handler and set level to debug
-    handler = logging.FileHandler(os.path.join(os.getenv('APPDATA'), 'amazon-backup', "all.log"), "w")
+    handler = logging.FileHandler(os.path.join(log_folder, "all.log"), "w")
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(format_string)
     handler.setFormatter(formatter)

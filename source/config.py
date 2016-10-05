@@ -11,12 +11,16 @@ class Config(object):
     '''
 
     def __init__(self, file_path = None):
+        import platform
         self.__config_cache = None
 
         if file_path:
             self.file_path = file_path
         else:
-            self.file_path = os.path.join(os.getenv('APPDATA'), 'amazon-backup', 'confg.json')
+            if platform.system() == 'Windows':
+                self.file_path = os.path.join(os.getenv('APPDATA'), 'amazon-backup', 'confg.json')
+            else:
+                self.file_path = os.path.join(os.path.expanduser("~") , ".local" , "share" , 'amazon-backup', 'confg.json')
 
     @property
     def config(self):
