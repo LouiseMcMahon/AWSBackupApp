@@ -10,7 +10,8 @@ class TestFile(TestCase):
 
         self.assertEqual(file.path,read_file_loc,"path atribute not set correctly")
         self.assertEqual(file.name, "init_config_1_test.json", "name atribute not set correctly")
-        self.assertEqual(file.path_parent, os.path.join(os.getcwd(), 'test_files'), "path_parent atribute not set correctly")
+        print file.path_parent
+        self.assertEqual(file.path_parent, File.normalise_path(os.path.join(os.getcwd(), 'test_files')), "path_parent atribute not set correctly")
         self.assertEqual(file.path_relative, "init_config_1_test.json", "path_relative atribute not set correctly")
         self.assertEqual(file.bucket_name, "test-bucket", "bucket_name atribute not set correctly")
         self.assertEqual(file.s3_key, "test/path/init_config_1_test.json", "s3_key atribute not set correctly")
@@ -25,13 +26,23 @@ class TestFile(TestCase):
                          'string method not passing path correctly')
 
     def test_contents(self):
-        self.fail()
+        import os
+        read_file_loc = File.normalise_path(os.path.join(os.getcwd(), "test_files", "init_config_1_test.json"))
+        file = File(read_file_loc, os.path.join(os.getcwd(), 'test_files'), 'test-bucket', 'test/path/')
+
+        self.assertEqual(file.contents, "[\"this is a test file\"]", "contents not correct")
 
     def test_timestamp_created(self):
         self.fail()
 
     def test_timestamp_modified(self):
-        self.fail()
+        import os
+
+        read_file_loc = File.normalise_path(os.path.join(os.getcwd(), "test_files", "init_config_1_test.json"))
+        file = File(read_file_loc, os.path.join(os.getcwd(), 'test_files'), 'test-bucket', 'test/path/')
+        os.utime(read_file_loc, (1475664168, 1475664168))
+
+        self.assertEqual(file.timestamp_modified,1475664168,"modified time not correct")
 
     def test_upload(self):
         self.fail()

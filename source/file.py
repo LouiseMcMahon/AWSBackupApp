@@ -17,7 +17,7 @@ class File(object):
 
     @property
     def contents(self):
-        with file(self.path) as file:
+        with open(self.path) as file:
             contents = file.read()
         return contents
 
