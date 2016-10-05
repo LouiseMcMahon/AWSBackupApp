@@ -9,7 +9,7 @@ import os
 import platform
 import argparse
 
-def upload():
+def upload(overwrite):
     logging.info('Started')
     for folder in config.config['folders']:
         aws = AWS()
@@ -17,7 +17,7 @@ def upload():
         files = scan_folder(folder["path"],True,folder["ignore"])
         for file_path in files:
             file = File(file_path,folder["path"],folder["bucket_name"],folder['bucket_path'])
-            file.upload()
+            file.upload(overwrite)
     logging.info('Finished')
 
 #setup argument parsing
@@ -28,6 +28,8 @@ subparsers = parser.add_subparsers(help='sub-command help')
 parser_upload = subparsers.add_parser('upload', help='upload -h')
 parser_upload.add_argument('upload', action="store_true",
                     help='if passed it will upload any files that need to be uploaded as defined in the config file')
+parser_upload.add_argument('-o','--overwrite', action="store_true",
+                    help='if passed all files on s3 will be overwriten if if they are older')
 
 #restore specific arguments
 parser_restore = subparsers.add_parser('restore', help='restore -h')
@@ -44,9 +46,6 @@ log_level_group.add_argument("-v", "--verbose", action="store_true" , help="show
 log_level_group.add_argument("-q", "--quiet", action="store_true" , help="show no console output")
 
 args = parser.parse_args()
-
-#initialise config file
-config = Config()
 
 #setup logging
 logger = logging.getLogger()
@@ -87,5 +86,11 @@ logger.addHandler(handler)
 logging.getLogger('botocore').setLevel(logging.ERROR)
 logging.getLogger('boto3').setLevel(logging.ERROR)
 
+#initialise config file
+if args.config:
+    config = Config(args.config)
+else:
+    config = Config()
+
 if args.upload:
-    upload()
+    upload(args.overwrite)
