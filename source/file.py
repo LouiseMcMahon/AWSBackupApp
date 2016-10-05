@@ -54,30 +54,31 @@ class File(object):
         from datetime import datetime
         import time
         import botocore
+        import logging
 
         aws = AWS()
         object = aws.s3_object(self.bucket_name,self.s3_key)
-
         s3_last_modified = False
+
         try:
             s3_last_modified = object.last_modified
         except botocore.exceptions.ClientError as e:
             error_code = int(e.response['Error']['Code'])
             if error_code == 404:
-                print str(self) + ": new uploading"
+                logging.info(str(self) + ": new uploading")
                 object.upload_file(self.path)
         else:
             if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified and overwrite_if_older == False:
-                print str(self)+ ": out of date uploading"
+                logging.info(str(self)+ ": out of date uploading")
                 object.upload_file(self.path)
             elif overwrite_if_older == True:
                 if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified:
-                    print str(self) + ": out of date uploading"
+                    logging.info(str(self) + ": out of date uploading")
                 else:
-                    print str(self) + ": being overwriten"
+                    logging.info(str(self) + ": being overwriten")
                 object.upload_file(self.path)
             else:
-                print str(self) + ": older than backup skipping"
+                logging.info(str(self) + ": older than backup skipping")
 
 
 def scan_folder(folder_path,recursive = True,ignore_paths = []):
