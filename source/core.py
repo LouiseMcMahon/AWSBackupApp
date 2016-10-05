@@ -33,20 +33,30 @@ subparsers = parser.add_subparsers(help='sub-command help')
 #upload specific arguments
 parser_upload = subparsers.add_parser('upload', help='upload -h')
 parser_upload.add_argument('upload', action="store_true",
-                    help='if passed it will upload any files that need to be uploaded as defined in the config file')
+                    help='Upload files as defined in the config file')
 parser_upload.add_argument('-o','--overwrite', action="store_true",
-                    help='if passed all files on s3 will be overwriten if if they are older')
+                    help='All files on s3 will be overwritten even if local ones are older')
 
 #restore specific arguments
 parser_restore = subparsers.add_parser('restore', help='restore -h')
-parser_restore.add_argument('restore', action="store_true",
-                    help='if passed it will restore files ')
+parser_restore.add_argument('restore', type=str,
+                    help='Restore passed folder or file')
+parser_restore.add_argument('--timestamp', type=int,
+                    help='Restore file/s back to before passed timestamp if not set restore will use latest file version')
+parser_restore.add_argument('-c','--clean', action="store_true",
+                    help='Delete all existing file/s first')
 
 #global argumenrs
-parser.add_argument('--config',type=str,
+parser.add_argument('--apikey',type=str, nargs = 1,
+                    help='AWS API key will use aws configure if not passed')
+parser.add_argument('--secretkey',type=str, nargs = 1,
+                    help='AWS secret key will use aws configure if not passed')
+parser.add_argument('--config',type=str, nargs = 1,
                     help='path to the config file')
-parser.add_argument('--log', type=str,
-                    help='path to where log files can be put')
+parser.add_argument('--alllog', type=str, nargs = 1,
+                    help='path to all log file')
+parser.add_argument('--errorlog', type=str, nargs = 1,
+                    help='path to error log file')
 log_level_group = parser.add_mutually_exclusive_group()
 log_level_group.add_argument("-v", "--verbose", action="store_true" , help="show verbose console output")
 log_level_group.add_argument("-q", "--quiet", action="store_true" , help="show no console output")
