@@ -5,9 +5,9 @@ class File(object):
 
     def __init__(self,path,path_parent,bucket_name,bucket_path):
         import os
-        self.path = File.path_normalise(path)
-        self.name = File.path_leaf(self.path)
-        self.path_parent = File.path_normalise(path_parent)
+        self.path = path_normalise(path)
+        self.name = path_leaf(self.path)
+        self.path_parent = path_normalise(path_parent)
         self.path_relative = os.path.relpath(self.path,self.path_parent)
         self.bucket_name = bucket_name
         self.s3_key = bucket_path+ self.path_relative.replace('\\', '/')
@@ -79,51 +79,51 @@ class File(object):
             else:
                 print str(self) + ": older than backup skipping"
 
-    @staticmethod
-    def scan_folder(folder_path,recursive = True,ignore_paths = []):
-        import os
 
-        folder_path = File.path_normalise(folder_path)
-        files_to_return = []
+def scan_folder(folder_path,recursive = True,ignore_paths = []):
+    import os
 
-        if recursive:
-            for current_dir, sub_dirs, sub_files in os.walk(folder_path):
-                for path in ignore_paths:
-                    path = File.path_normalise(path)
-                    if path in current_dir:
-                        break
+    folder_path = path_normalise(folder_path)
+    files_to_return = []
 
-                #if path not in ingnore the else will run
-                else:
-                    for filename in sub_files:
-                        files_to_return.append(os.path.join(current_dir, filename))
+    if recursive:
+        for current_dir, sub_dirs, sub_files in os.walk(folder_path):
+            for path in ignore_paths:
+                path = path_normalise(path)
+                if path in current_dir:
+                    break
 
-        else:
-            files_in_folder = os.listdir(folder_path)
-            for file in files_in_folder:
-                if os.path.isfile(os.path.join(folder_path,file)):
-                    files_to_return.append(os.path.join(folder_path,file))
+            #if path not in ingnore the else will run
+            else:
+                for filename in sub_files:
+                    files_to_return.append(os.path.join(current_dir, filename))
 
-        return files_to_return
+    else:
+        files_in_folder = os.listdir(folder_path)
+        for file in files_in_folder:
+            if os.path.isfile(os.path.join(folder_path,file)):
+                files_to_return.append(os.path.join(folder_path,file))
 
-    @staticmethod
-    def path_normalise(path):
-        """
-        function to lowercase and normalise paths removing extraneous ../ etc
-        :param path string: path to be normalised
-        :return string: normalised path
-        """
-        import os
-        return os.path.normcase(os.path.normpath(path))
+    return files_to_return
 
-    @staticmethod
-    def path_leaf(path):
-        """
-        function that relibly gets the a files filename
-        :param path: path to file
-        :return string: file name
-        """
-        import ntpath
-        head, tail = ntpath.split(path)
-        return tail or ntpath.basename(head)
+
+def path_normalise(path):
+    """
+    function to lowercase and normalise paths removing extraneous ../ etc
+    :param path string: path to be normalised
+    :return string: normalised path
+    """
+    import os
+    return os.path.normcase(os.path.normpath(path))
+
+
+def path_leaf(path):
+    """
+    function that relibly gets the a files filename
+    :param path: path to file
+    :return string: file name
+    """
+    import ntpath
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
         
