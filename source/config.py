@@ -1,6 +1,7 @@
 import json
 import os
 import errno
+import logging
 
 
 class Config(object):
@@ -12,10 +13,15 @@ class Config(object):
 
     def __init__(self, file_path = None):
         import platform
+        import sys
         self.__config_cache = None
 
         if file_path:
-            self.file_path = file_path
+            if os.path.exists(file_path):
+                self.file_path = file_path
+            else:
+                logging.error(str(file_path) + ": does not exist")
+                sys.exit()
         else:
             if platform.system() == 'Windows':
                 self.file_path = os.path.join(os.getenv('APPDATA'), 'amazon-backup', 'confg.json')
