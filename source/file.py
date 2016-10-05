@@ -69,13 +69,13 @@ class File(object):
                 object.upload_file(self.path)
         else:
             if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified and overwrite_if_older == False:
-                logging.info(str(self)+ ": out of date uploading")
+                logging.info(str(self)+ ": backup out of date uploading")
                 object.upload_file(self.path)
             elif overwrite_if_older == True:
                 if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified:
-                    logging.info(str(self) + ": out of date uploading")
+                    logging.info(str(self) + ": backup out of date uploading")
                 else:
-                    logging.info(str(self) + ": being overwriten")
+                    logging.info(str(self) + ": older than backup uploading anyway")
                 object.upload_file(self.path)
             else:
                 logging.info(str(self) + ": older than backup skipping")
