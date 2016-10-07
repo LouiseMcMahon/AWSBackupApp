@@ -49,14 +49,11 @@ class File(object):
         else:
             return self.timestamp_created
 
-    def upload(self,overwrite_if_older = False):
-        from aws import AWS
-        from datetime import datetime
+    def upload(self,aws,overwrite_if_older = False):
         import time
         import botocore
         import logging
 
-        aws = AWS()
         object = aws.s3_object(self.bucket_name,self.s3_key)
         s3_last_modified = False
 
@@ -67,18 +64,23 @@ class File(object):
             if error_code == 404:
                 logging.info(str(self) + ": new uploading")
                 object.upload_file(self.path)
-        else:
-            if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified and overwrite_if_older == False:
-                logging.info(str(self)+ ": backup out of date uploading")
-                object.upload_file(self.path)
-            elif overwrite_if_older == True:
-                if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified:
-                    logging.info(str(self) + ": backup out of date uploading")
-                else:
-                    logging.info(str(self) + ": older than backup uploading anyway")
-                object.upload_file(self.path)
             else:
-                logging.info(str(self) + ": older than backup skipping")
+                logging.error(str(self)+ " : AWS Error "+ e.response['Error']['Message'])
+        else:
+            try:
+                if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified and overwrite_if_older == False:
+                    logging.info(str(self)+ ": backup out of date uploading")
+                    object.upload_file(self.path)
+                elif overwrite_if_older == True:
+                    if time.mktime(s3_last_modified.timetuple()) < self.timestamp_modified:
+                        logging.info(str(self) + ": backup out of date uploading")
+                    else:
+                        logging.info(str(self) + ": older than backup uploading anyway")
+                    object.upload_file(self.path)
+                else:
+                    logging.info(str(self) + ": older than backup skipping")
+            except  botocore.exceptions.ClientError as e:
+                logging.error(str(self) + " : AWS Error " + e.response['Error']['Message'])
 
 
 def scan_folder(folder_path,recursive = True,ignore_paths = []):
@@ -128,19 +130,21 @@ def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
         
-def delete_none_existing_files(bucket_name,s3_path,existsing_files):
-    from aws import AWS
+def delete_none_existing_files(bucket_name,s3_path,existsing_files,aws):
     import logging
-    aws = AWS()
-    bucket = aws.s3_bucket(bucket_name)
+    import botocore
+    try:
+        bucket = aws.s3_bucket(bucket_name)
 
-    all_objects = bucket.objects.all()
-    for object in all_objects:
-        if s3_path in object.key:
-            for existsing_file in existsing_files:
-                if object.key == existsing_file.s3_key:
-                    logging.info(str(object.key) + ": exists on local leaving on s3")
-                    break
-            else:
-                logging.info(str(object.key) + ": does not exist on local deleting from s3")
-                object.delete()
+        all_objects = bucket.objects.all()
+        for object in all_objects:
+            if s3_path in object.key:
+                for existsing_file in existsing_files:
+                    if object.key == existsing_file.s3_key:
+                        logging.info(str(object.key) + ": exists on local leaving in bucket")
+                        break
+                else:
+                    logging.info(str(object.key) + ": does not exist on local removing from bucket")
+                    object.delete()
+    except  botocore.exceptions.ClientError as e:
+        logging.error(str(bucket_name) + " : AWS Error " + e.response['Error']['Message'])

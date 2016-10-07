@@ -9,54 +9,95 @@ import os
 import platform
 import argparse
 
-def upload(overwrite):
-    logging.info('Uploading files to S3')
-    for folder in config.config['folders']:
-        aws = AWS()
+def num_to_ith(num):
+    if num > 9:
+        secondToLastDigit = str(num)[-2]
+        if secondToLastDigit == "1":
+            return str(num)+"th"
+    lastDigit = num % 10
+    if (lastDigit == 1):
+        return str(num)+"st"
+    elif (lastDigit == 2):
+        return str(num)+"nd"
+    elif (lastDigit == 3):
+        return str(num)+"rd"
+    else:
+        return str(num)+"th"
+
+def upload(overwrite,config,aws):
+    from aws import AWS
+    logging.info("Uploading files to S3")
+    i = 0
+    for folder in config.config["folders"]:
+        i +=1
+        aws_object = aws
+        if "aws_credentials" in folder:
+            if "api_key" in folder["aws_credentials"] and "secret_key" in folder["aws_credentials"]:
+                aws_object = AWS(folder["aws_credentials"]["api_key"],folder["aws_credentials"]["secret_key"])
+
+        if "path" not in folder:
+            logging.error("path not set in config for "+num_to_ith(i)+" folder")
+            continue
+
+        if "bucket_name" not in folder:
+            logging.error("bucket_name not set in config for "+num_to_ith(i)+" folder")
+            continue
+
+        if "bucket_path" not in folder:
+            logging.error("bucket_path not set in config for "+num_to_ith(i)+" folder" )
+            continue
+
+        if "ignore" not in folder:
+            folder["ignore"] = []
 
         files = scan_folder(folder["path"],True,folder["ignore"])
         file_objects = []
         for file_path in files:
-            file = File(file_path,folder["path"],folder["bucket_name"],folder['bucket_path'])
-            file.upload(overwrite)
+            file = File(file_path,folder["path"],folder["bucket_name"],folder["bucket_path"])
+            file.upload(aws_object,overwrite)
             file_objects.append(file)
 
-    logging.info('Deleting files from S3')
-    delete_none_existing_files(folder["bucket_name"],folder['bucket_path'],file_objects)
+        logging.info("Removing old files from S3")
+        delete_none_existing_files(folder["bucket_name"],folder["bucket_path"],file_objects,aws_object)
 
-    logging.info('Finished')
+    logging.info("Finished")
 
 #setup argument parsing
-parser = argparse.ArgumentParser(description='S3 backup utility')
-subparsers = parser.add_subparsers(help='sub-command help')
+parser = argparse.ArgumentParser(description="S3 backup utility")
+subparsers = parser.add_subparsers(help="sub-command help")
 
 #upload specific arguments
-parser_upload = subparsers.add_parser('upload', help='upload -h')
-parser_upload.add_argument('upload', action="store_true",
-                    help='Upload files as defined in the config file')
-parser_upload.add_argument('-o','--overwrite', action="store_true",
-                    help='All files on s3 will be overwritten even if local ones are older')
+parser_upload = subparsers.add_parser("upload", help="upload -h")
+parser_upload.add_argument("upload", action="store_true",
+                    help="Upload files as defined in the config file")
+parser_upload.add_argument("-o","--overwrite", action="store_true",
+                    help="All files on s3 will be overwritten even if local ones are older")
 
 #restore specific arguments
-parser_restore = subparsers.add_parser('restore', help='restore -h')
-parser_restore.add_argument('restore', type=str,
-                    help='Restore passed folder or file')
-parser_restore.add_argument('--timestamp', type=int,
-                    help='Restore file/s back to before passed timestamp if not set restore will use latest file version')
-parser_restore.add_argument('-c','--clean', action="store_true",
-                    help='Delete all existing file/s first')
+parser_restore = subparsers.add_parser("restore", help="restore -h")
+parser_restore.add_argument("restore", type=str,
+                    help="Restore passed folder or file")
+parser_restore.add_argument("--timestamp", type=int,
+                    help="Restore file/s back to before passed timestamp if not set restore will use latest file version")
+parser_restore.add_argument("-c","--clean", action="store_true",
+                    help="Delete all existing file/s first")
+
+#restore specific arguments
+parser_config = subparsers.add_parser("config", help="config -h")
+parser_config.add_argument("config", action="store_true",
+                    help="Configure what folders are to be backed up and to where")
 
 #global argumenrs
-parser.add_argument('--apikey',type=str, nargs = 1,
-                    help='AWS API key will use aws configure if not passed')
-parser.add_argument('--secretkey',type=str, nargs = 1,
-                    help='AWS secret key will use aws configure if not passed')
-parser.add_argument('--config',type=str, nargs = 1,
-                    help='path to the config file')
-parser.add_argument('--alllog', type=str, nargs = 1,
-                    help='path to all log file')
-parser.add_argument('--errorlog', type=str, nargs = 1,
-                    help='path to error log file')
+parser.add_argument("--apikey",type=str, nargs = 1,
+                    help="AWS API key will use aws configure if not passed and settings in your confg file will overwrite")
+parser.add_argument("--secretkey",type=str, nargs = 1,
+                    help="AWS secret key will use aws configure if not passed and settings in your confg file will overwrite")
+parser.add_argument("--config",type=str, nargs = 1,
+                    help="path to the config file")
+parser.add_argument("--alllog", type=str, nargs = 1,
+                    help="path to all log file")
+parser.add_argument("--errorlog", type=str, nargs = 1,
+                    help="path to error log file")
 log_level_group = parser.add_mutually_exclusive_group()
 log_level_group.add_argument("-v", "--verbose", action="store_true" , help="show verbose console output")
 log_level_group.add_argument("-q", "--quiet", action="store_true" , help="show no console output")
@@ -67,10 +108,10 @@ args = parser.parse_args()
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 format_string = "[%(levelname)s] [%(name)s] [%(asctime)s] %(message)s"
-if platform.system() == 'Windows':
-    log_folder = os.path.join(os.getenv('APPDATA'), 'amazon-backup')
+if platform.system() == "Windows":
+    log_folder = os.path.join(os.getenv("APPDATA"), "amazon-backup")
 else:
-    log_folder = os.path.join(os.path.expanduser("~"), ".local", "share", 'amazon-backup')
+    log_folder = os.path.join(os.path.expanduser("~"), ".local", "share", "amazon-backup")
 
 
 # create console handler and set level to info
@@ -107,8 +148,8 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 #set boto to only log errors
-logging.getLogger('botocore').setLevel(logging.ERROR)
-logging.getLogger('boto3').setLevel(logging.ERROR)
+logging.getLogger("botocore").setLevel(logging.ERROR)
+logging.getLogger("boto3").setLevel(logging.ERROR)
 
 #initialise config file
 if args.config:
@@ -116,5 +157,11 @@ if args.config:
 else:
     config = Config()
 
+#initialise aws
+aws = AWS()
+if args.apikey and args.secretkey:
+    aws = AWS(args.apikey,args.secretkey)
+    
+
 if args.upload:
-    upload(args.overwrite)
+    upload(args.overwrite,config,aws)
