@@ -62,94 +62,101 @@ def upload(overwrite,config,aws):
 
     logging.info("Finished")
 
-#setup argument parsing
-parser = argparse.ArgumentParser(description="S3 backup utility")
-subparsers = parser.add_subparsers(help="sub-command help")
-
-#upload specific arguments
-parser_upload = subparsers.add_parser("upload", help="upload -h")
-parser_upload.add_argument("upload", action="store_true",
-                    help="Upload files as defined in the config file")
-parser_upload.add_argument("-o","--overwrite", action="store_true",
-                    help="All files on s3 will be overwritten even if local ones are older")
-
-#restore specific arguments
-parser_restore = subparsers.add_parser("restore", help="restore -h")
-parser_restore.add_argument("restore", type=str,
-                    help="Restore passed folder or file")
-parser_restore.add_argument("--timestamp", type=int,
-                    help="Restore file/s back to before passed timestamp if not set restore will use latest file version")
-parser_restore.add_argument("-c","--clean", action="store_true",
-                    help="Delete all existing file/s first")
-
-#restore specific arguments
-parser_config = subparsers.add_parser("config", help="config -h")
-parser_config.add_argument("config", action="store_true",
-                    help="Configure what folders are to be backed up and to where")
-
-#global argumenrs
-parser.add_argument("--apikey",type=str, nargs = 1,
-                    help="AWS API key will use aws configure if not passed and settings in your confg file will overwrite")
-parser.add_argument("--secretkey",type=str, nargs = 1,
-                    help="AWS secret key will use aws configure if not passed and settings in your confg file will overwrite")
-parser.add_argument("--config",type=str, nargs = 1,
-                    help="path to the config file")
-parser.add_argument("--alllog", type=str, nargs = 1,
-                    help="path to all log file")
-parser.add_argument("--errorlog", type=str, nargs = 1,
-                    help="path to error log file")
-log_level_group = parser.add_mutually_exclusive_group()
-log_level_group.add_argument("-v", "--verbose", action="store_true" , help="show verbose console output")
-log_level_group.add_argument("-q", "--quiet", action="store_true" , help="show no console output")
-
-args = parser.parse_args()
-
-#setup logging
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-format_string = "[%(levelname)s] [%(name)s] [%(asctime)s] %(message)s"
-if platform.system() == "Windows":
-    log_folder = os.path.join(os.getenv("APPDATA"), "amazon-backup")
-else:
-    log_folder = os.path.join(os.path.expanduser("~"), ".local", "share", "amazon-backup")
-
-
-# create console handler and set level to info
-if args.quiet != True:
-    handler = logging.StreamHandler()
-    if args.verbose:
-        handler.setLevel(logging.INFO)
+def logger():
+    # setup logging
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    format_string = "[%(levelname)s] [%(name)s] [%(asctime)s] %(message)s"
+    if platform.system() == "Windows":
+        log_folder = os.path.join(os.getenv("APPDATA"), "amazon-backup")
     else:
-        handler.setLevel(logging.WARNING)
+        log_folder = os.path.join(os.path.expanduser("~"), ".local", "share", "amazon-backup")
+
+    # create console handler and set level to info
+    if args.quiet != True:
+        handler = logging.StreamHandler()
+        if args.verbose:
+            handler.setLevel(logging.INFO)
+        else:
+            handler.setLevel(logging.WARNING)
+        formatter = logging.Formatter(format_string)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    # create error file handler and set level to error
+    if args.errorlog:
+        error_log_path = args.errorlog
+    else:
+        error_log_path = os.path.join(log_folder, "error.log")
+    handler = logging.FileHandler(error_log_path, "w", encoding=None, delay="true")
+    handler.setLevel(logging.ERROR)
     formatter = logging.Formatter(format_string)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-# create error file handler and set level to error
-if args.errorlog:
-    error_log_path = args.errorlog
-else:
-    error_log_path = os.path.join(log_folder, "error.log")
-handler = logging.FileHandler(error_log_path, "w", encoding=None, delay="true")
-handler.setLevel(logging.ERROR)
-formatter = logging.Formatter(format_string)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+    # create debug file handler and set level to debug
+    if args.alllog:
+        all_log_path = args.alllog
+    else:
+        all_log_path = os.path.join(log_folder, "all.log")
+    handler = logging.FileHandler(all_log_path, "w")
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(format_string)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-# create debug file handler and set level to debug
-if args.alllog:
-    all_log_path = args.alllog
-else:
-    all_log_path = os.path.join(log_folder, "all.log")
-handler = logging.FileHandler(all_log_path, "w")
-handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter(format_string)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+    # set boto to only log errors
+    logging.getLogger("botocore").setLevel(logging.ERROR)
+    logging.getLogger("boto3").setLevel(logging.ERROR)
 
-#set boto to only log errors
-logging.getLogger("botocore").setLevel(logging.ERROR)
-logging.getLogger("boto3").setLevel(logging.ERROR)
+def parser():
+    #setup argument parsing
+    parser = argparse.ArgumentParser(description="S3 backup utility")
+    subparsers = parser.add_subparsers(help="sub-command help")
+
+    #upload specific arguments
+    parser_upload = subparsers.add_parser("upload", help="upload -h")
+    parser_upload.add_argument("upload", action="store_true",
+                        help="Upload files as defined in the config file")
+    parser_upload.add_argument("-o","--overwrite", action="store_true",
+                        help="All files on s3 will be overwritten even if local ones are older")
+
+    #restore specific arguments
+    parser_restore = subparsers.add_parser("restore", help="restore -h")
+    parser_restore.add_argument("restore", type=str,
+                        help="Restore passed folder or file")
+    parser_restore.add_argument("--timestamp", type=int,
+                        help="Restore file/s back to before passed timestamp if not set restore will use latest file version")
+    parser_restore.add_argument("-c","--clean", action="store_true",
+                        help="Delete all existing file/s first")
+
+    #restore specific arguments
+    parser_config = subparsers.add_parser("config", help="config -h")
+    parser_config.add_argument("config", action="store_true",
+                        help="Configure what folders are to be backed up and to where")
+
+    #global argumenrs
+    parser.add_argument("--apikey",type=str, nargs = 1,
+                        help="AWS API key will use aws configure if not passed and settings in your confg file will overwrite")
+    parser.add_argument("--secretkey",type=str, nargs = 1,
+                        help="AWS secret key will use aws configure if not passed and settings in your confg file will overwrite")
+    parser.add_argument("--config",type=str, nargs = 1,
+                        help="path to the config file")
+    parser.add_argument("--alllog", type=str, nargs = 1,
+                        help="path to all log file")
+    parser.add_argument("--errorlog", type=str, nargs = 1,
+                        help="path to error log file")
+    log_level_group = parser.add_mutually_exclusive_group()
+    log_level_group.add_argument("-v", "--verbose", action="store_true" , help="show verbose console output")
+    log_level_group.add_argument("-q", "--quiet", action="store_true" , help="show no console output")
+
+    return parser.parse_args()
+
+#initialise parser
+args = parser()
+
+#initialise logger
+logger()
 
 #initialise config file
 if args.config:
