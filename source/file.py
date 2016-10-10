@@ -9,7 +9,7 @@ class File(object):
         self.name = path_leaf(self.path)
         self.path_parent = path_normalise(path_parent)
         self.path_relative = os.path.relpath(self.path,self.path_parent)
-        self.bucket_name = bucket_name
+        self.s3_bucket = bucket_name
         self.s3_key = bucket_path+ self.path_relative.replace('\\', '/')
 
     def __str__(self):
@@ -54,7 +54,7 @@ class File(object):
         import botocore
         import logging
 
-        object = aws.s3_object(self.bucket_name,self.s3_key)
+        object = aws.s3_object(self.s3_bucket, self.s3_key)
         s3_last_modified = False
 
         try:
@@ -81,6 +81,12 @@ class File(object):
                     logging.info(str(self) + ": older than backup skipping")
             except  botocore.exceptions.ClientError as e:
                 logging.error(str(self) + " : AWS Error " + e.response['Error']['Message'])
+
+    def restore(self,aws,resourceID = False):
+        if resourceID:
+            pass
+        else:
+            aws.s3_object(self.s3_bucket, self.s3_key).download_file(self.path)
 
 
 def scan_folder(folder_path,recursive = True,ignore_paths = []):
@@ -148,3 +154,15 @@ def delete_none_existing_files(bucket_name,s3_path,existsing_files,aws):
                     object.delete()
     except  botocore.exceptions.ClientError as e:
         logging.error(str(bucket_name) + " : AWS Error " + e.response['Error']['Message'])
+
+def recursive_delete(folder):
+    import os, shutil
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(e)

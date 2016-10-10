@@ -13,7 +13,7 @@ class TestFile(TestCase):
         print file.path_parent
         self.assertEqual(file.path_parent, path_normalise(os.path.join(os.getcwd(), 'test_files')), "path_parent atribute not set correctly")
         self.assertEqual(file.path_relative, "init_config_1_test.json", "path_relative atribute not set correctly")
-        self.assertEqual(file.bucket_name, "test-bucket", "bucket_name atribute not set correctly")
+        self.assertEqual(file.s3_bucket, "test-bucket", "bucket_name atribute not set correctly")
         self.assertEqual(file.s3_key, "test/path/init_config_1_test.json", "s3_key atribute not set correctly")
 
     def test_str(self):
