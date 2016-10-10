@@ -82,9 +82,21 @@ class File(object):
             except  botocore.exceptions.ClientError as e:
                 logging.error(str(self) + " : AWS Error " + e.response['Error']['Message'])
 
-    def restore(self,aws,resourceID = False):
-        if resourceID:
-            pass
+    def restore(self,aws,version_id = False):
+        import os
+        if not os.path.exists(os.path.dirname(self.path)):
+            os.makedirs(os.path.dirname(self.path))
+
+        if version_id:
+            # object = aws.s3_object(self.s3_bucket, self.s3_key).Version(version_id)
+            # pprint(object.last_modified)
+            # object_body = object.get()['Body']
+
+            object = aws.s3_client.get_object(Bucket=self.s3_bucket, Key=self.s3_key, VersionId=version_id)
+            contents = object['Body'].read()
+            with open(self.path, "wb") as text_file:
+                text_file.write(contents)
+
         else:
             aws.s3_object(self.s3_bucket, self.s3_key).download_file(self.path)
 

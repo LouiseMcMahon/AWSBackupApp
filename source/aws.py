@@ -21,6 +21,18 @@ class AWS(object):
 
         return client
 
+    def s3_object_version(self,bucket_name,key,id):
+        if self.api_key and self.secret_key:
+            s3 =  boto3.resource(
+                's3',
+                aws_access_key_id=self.api_key,
+                aws_secret_access_key=self.secret_key
+            )
+        else:
+            s3 = boto3.resource('s3')
+
+        return s3.ObjectVersion(bucket_name, key, id)
+
     def s3_object(self,bucket_name,key):
         if self.api_key and self.secret_key:
             s3 =  boto3.resource(

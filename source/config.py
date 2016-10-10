@@ -37,7 +37,10 @@ class Config(object):
         #if not cached and file exists get it and set cache
         elif os.path.isfile(self.file_path):
             with open(self.file_path) as data_file:
-                self.__config_cache = json.load(data_file)
+                try:
+                    self.__config_cache = json.load(data_file)
+                except ValueError:
+                    logging.error("Config file not valid json")
             return self.__config_cache
         #if file does not exist create it
         else:

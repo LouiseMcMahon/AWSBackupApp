@@ -65,60 +65,74 @@ def upload(overwrite,config,aws):
 def restore(restore_path, timestamp, config, aws, clean = False):
     import os
     import botocore
+    import time
     restore_path = path_normalise(restore_path)
-    for folder_config in config.config['folders']:
-        #get config for restore path
-        if "path" in folder_config:
-            if path_normalise(folder_config['path']) in restore_path:
-                #delte old files if requested
-                if clean:
-                    if os.path.isfile(restore_path):
-                        os.unlink(restore_path)
-                    elif os.path.isdir(restore_path):
-                        recursive_delete(restore_path+os.path.sep)
+    if config.config:
+        for folder_config in config.config["folders"]:
+            #get config for restore path
+            if "path" in folder_config:
+                if path_normalise(folder_config["path"]) in restore_path:
+                    #delte old files if requested
+                    if clean:
+                        if "ignore" in folder_config:
+                            if len(folder_config["ignore"]) > 0:
+                                logging.error("Cannot do clean while there are ignored folders, clean manually first")
+                                return
+                        if os.path.isfile(restore_path):
+                            os.unlink(restore_path)
+                        elif os.path.isdir(restore_path):
+                            recursive_delete(restore_path+os.path.sep)
 
-                if "bucket_name" in folder_config:
-                    aws_object = aws
-                    if "aws_credentials" in folder_config:
-                        if "api_key" in folder_config["aws_credentials"] and "secret_key" in folder_config["aws_credentials"]:
-                            aws_object = AWS(folder_config["aws_credentials"]["api_key"],
-                                             folder_config["aws_credentials"]["secret_key"])
-                    try:
-                        prefix = folder_config["bucket_path"]+restore_path.replace(path_normalise(folder_config["path"]),'').strip(os.path.sep)
-                        bucket = aws_object.s3_bucket(folder_config["bucket_name"])
+                    if "bucket_name" in folder_config:
+                        aws_object = aws
+                        if "aws_credentials" in folder_config:
+                            if "api_key" in folder_config["aws_credentials"] and "secret_key" in folder_config["aws_credentials"]:
+                                aws_object = AWS(folder_config["aws_credentials"]["api_key"],
+                                                 folder_config["aws_credentials"]["secret_key"])
+                        try:
+                            prefix = folder_config["bucket_path"]+restore_path.replace(path_normalise(folder_config["path"]),'').strip(os.path.sep)
+                            bucket = aws_object.s3_bucket(folder_config["bucket_name"])
 
-                        if timestamp and timestamp > 0:
-                            objects = {}
-                            for object in bucket.object_versions.filter(Prefix=prefix):
-                                if object.object_key not in objects:
-                                    objects[object.object_key] = []
-                                objects[object.object_key].append(object)
+                            if timestamp and timestamp > 0:
+                                objects = {}
+                                for object in bucket.object_versions.filter(Prefix=prefix):
+                                    if object.object_key not in objects:
+                                        objects[object.object_key] = []
+                                    objects[object.object_key].append(object)
 
-                            for list in objects:
-                                objects[list] = sorted(objects[list], key=lambda object: object.last_modified, reverse=True)
-                                for object in objects[list]:
-                                    pprint(object.size)
-                                    # pprint(object.last_modified.strftime("%Y-%m-%d %I:%M:%S %p"))
-                        else:
-                            objects = bucket.objects.filter(Prefix=prefix)
-                            for object in objects:
-                                path = object.key.replace(folder_config["bucket_path"],'')
-                                path = os.path.join(restore_path,path.replace('/',os.path.sep))
-                                file = File(path,folder_config["path"],folder_config["bucket_name"],folder_config["bucket_path"])
-                                file.restore(aws_object)
+                                for list in objects:
+                                    objects[list] = sorted(objects[list], key=lambda object: object.last_modified, reverse=True)
+                                    for object in objects[list]:
+                                        if time.mktime(object.last_modified.timetuple()) < timestamp:
+                                            if object.size != None:
+                                                path = object.key.replace(folder_config["bucket_path"], '')
+                                                path = os.path.join(restore_path, path.replace('/', os.path.sep))
+                                                file = File(path,
+                                                            folder_config["path"],
+                                                            folder_config["bucket_name"],
+                                                            folder_config["bucket_path"])
+                                                file.restore(aws_object,object.version_id)
+                            else:
+                                objects = bucket.objects.filter(Prefix=prefix)
+                                for object in objects:
+                                    path = object.key.replace(folder_config["bucket_path"],'')
+                                    path = os.path.join(restore_path,path.replace('/',os.path.sep))
+                                    file = File(path,folder_config["path"],folder_config["bucket_name"],folder_config["bucket_path"])
+                                    file.restore(aws_object)
 
-                    except botocore.exceptions.ClientError as e:
-                        logging.error(": AWS Error " + e.response['Error']['Message'])
+                        except botocore.exceptions.ClientError as e:
+                            logging.error(": AWS Error " + e.response['Error']['Message'])
 
-                else:
-                    logging.error("bucket_name not found in config file")
+                    else:
+                        logging.error("bucket_name not found in config file")
 
-                # End
-                return
+                    #return when complete or the not found in config file error will be passed
+                    return
+
+            else:
+                continue
         else:
-            continue
-    else:
-        logging.error(restore_path + " not found in config file")
+            logging.error(restore_path + " not found in config file")
 
 def logger():
     # setup logging
