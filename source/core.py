@@ -96,7 +96,13 @@ def restore(restore_path, timestamp, config, aws, clean = False):
                             prefix = folder_config["bucket_path"]+restore_path.replace(path_normalise(folder_config["path"]),'').strip(os.path.sep)
                             bucket = aws_object.s3_bucket(folder_config["bucket_name"])
 
-                            if timestamp and timestamp > 0:
+                            if timestamp:
+
+                                bucket_versioning = bucket.Versioning()
+                                if bucket_versioning.status != "Enabled":
+                                    logging.error("Cannot do timestamped restore this is not a versioned bucket")
+                                    return
+
                                 objects = {}
                                 for object in bucket.object_versions.filter(Prefix=prefix):
                                     if object.object_key not in objects:
