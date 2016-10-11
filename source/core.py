@@ -67,13 +67,16 @@ def restore(restore_path, timestamp, config, aws, clean = False):
     import botocore
     import time
     restore_path = path_normalise(restore_path)
+    logging.info("Starting restore")
     if config.config:
         for folder_config in config.config["folders"]:
             #get config for restore path
             if "path" in folder_config:
                 if path_normalise(folder_config["path"]) in restore_path:
+                    logging.info("Config found")
                     #delte old files if requested
                     if clean:
+                        logging.info("Cleaning away old files")
                         if "ignore" in folder_config:
                             if len(folder_config["ignore"]) > 0:
                                 logging.error("Cannot do clean while there are ignored folders, clean manually first")
@@ -111,12 +114,16 @@ def restore(restore_path, timestamp, config, aws, clean = False):
                                                             folder_config["path"],
                                                             folder_config["bucket_name"],
                                                             folder_config["bucket_path"])
+                                                logging.info("Restoring " + path + " to " + object.last_modified.strftime("%I:%M%p on %B %d, %Y"))
                                                 file.restore(aws_object,object.version_id)
+                                            break
                             else:
+
                                 objects = bucket.objects.filter(Prefix=prefix)
                                 for object in objects:
                                     path = object.key.replace(folder_config["bucket_path"],'')
                                     path = os.path.join(restore_path,path.replace('/',os.path.sep))
+                                    logging.info("Restoring " + path)
                                     file = File(path,folder_config["path"],folder_config["bucket_name"],folder_config["bucket_path"])
                                     file.restore(aws_object)
 
@@ -127,6 +134,7 @@ def restore(restore_path, timestamp, config, aws, clean = False):
                         logging.error("bucket_name not found in config file")
 
                     #return when complete or the not found in config file error will be passed
+                    logging.info("Finished")
                     return
 
             else:
