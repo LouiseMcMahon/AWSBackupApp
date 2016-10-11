@@ -63,8 +63,8 @@ A sample config file structure is bellow:
 
 Each folder is a dict containing:
 * `"name"` Is your name for the folder to be backed up it should be a one line string.
-* `"path"` Is the absoute path to the folder you wish to backup.
-* `"ignore"` Is a list of absoute path's you wish to be ignored when the backup takes place.
+* `"path"` Is the absolute path to the folder you wish to backup.
+* `"ignore"` Is a list of absolute path's you wish to be ignored when the backup takes place.
 * `"bucket_name"` Is the name of the S3 bucket you wish to backup to.
 * `"bucket_path"` Is the "folder" that you wish files on S3 to be placed in (this is just prepended to the key on s3 and does not need to contain slashes)
 * `"aws_credentials"` should either contain both the  `"api_key"` and `"secret_key"` to acces the bucket or not be set at all.
@@ -80,8 +80,8 @@ By passing `-v` or `--verbose` the app will pass all messages to the console.
 Alternatively `-a` or `--quiet` will make it pass nothing these arguments do not affect the log files which will always be written.
 
 `--apikey` and `--secretkey` can be used to pass your AWS api credentials if none are passed aws configure credentials will be used
- and if specific creditals are set in the config file for folders they will always be used. 
- If you are running on EC2 IAM roles can be used as normall. 
+ and if specific credentials are set in the config file for folders they will always be used. 
+ If you are running on EC2 IAM roles can be used as normal. 
 
 ### Backing Up
 The above optional arguments relate to all commands and should be passed first then the command `upload` ie `-v --config "path to config file" upload -o`.
@@ -90,7 +90,7 @@ By default files are only uploaded to S3 is they are newer than the ones on S3.
 If you pass `-o` or `--overwrite` all files will be uploaded regardless of age.
 
 ### Restoring
-Like with the `upload` command argumenrs like `-v` should be passed first then pass `restore "/path/to/file/or/folder"`, this will restore that file or folder to the latest version in S3.
+Like with the `upload` command arguments like `-v` should be passed first then pass `restore "/path/to/file/or/folder"`, this will restore that file or folder to the latest version in S3.
 
 `-c` or `--clean` can be passed to remove all files and folders in path passed path. This is currently only supported if you do not have ignored folders in the config for that folder.
 
@@ -103,4 +103,4 @@ Like with the `upload` command argumenrs like `-v` should be passed first then p
 * File Encryption
 
 ##Pull Requests
-PR's are welcome espcially to add more unit and integration tests, but for features please open an issue and check it with us first.
+PR's are welcome especially to add more unit and integration tests, but for features please open an issue and check it with us first.
