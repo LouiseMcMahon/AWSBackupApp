@@ -10,7 +10,6 @@ class TestFile(TestCase):
 
         self.assertEqual(file.path,read_file_loc,"path atribute not set correctly")
         self.assertEqual(file.name, "init_config_1_test.json", "name atribute not set correctly")
-        print file.path_parent
         self.assertEqual(file.path_parent, path_normalise(os.path.join(os.getcwd(), 'test_files')), "path_parent atribute not set correctly")
         self.assertEqual(file.path_relative, "init_config_1_test.json", "path_relative atribute not set correctly")
         self.assertEqual(file.s3_bucket, "test-bucket", "bucket_name atribute not set correctly")

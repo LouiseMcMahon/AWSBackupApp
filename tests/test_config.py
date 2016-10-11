@@ -20,6 +20,7 @@ class TestConfigFile(TestCase):
         self.files_to_remove.append(create_file_loc)
 
         #create a config file from scratch
+        open(create_file_loc, 'a').close()
         config_file = Config(create_file_loc)
         self.assertEqual(config_file.file_path,
                          create_file_loc,
@@ -40,7 +41,9 @@ class TestConfigFile(TestCase):
                          "config not retrived corectly")
 
     def test_config_property(self):
-        create_file_loc = os.path.join(os.getcwd(), "init_config_2_test.json")
+
+        create_file_loc = os.path.join(os.getcwd(), "test_files", "init_config_2_test.json")
+        open(create_file_loc, 'a').close()
         self.files_to_remove.append(create_file_loc)
 
         config_file = Config(create_file_loc)
