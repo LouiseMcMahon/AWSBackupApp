@@ -217,9 +217,9 @@ def parser():
                         help="Delete all existing file/s first")
 
     #restore specific arguments
-    parser_config = subparsers.add_parser("config", help="config -h")
-    parser_config.add_argument("config", action="store_true",
-                        help="Configure what folders are to be backed up and to where")
+    # parser_config = subparsers.add_parser("config", help="config -h")
+    # parser_config.add_argument("config", action="store_true",
+    #                     help="Configure what folders are to be backed up and to where")
 
     #global argumenrs
     parser.add_argument("--apikey",type=str, nargs = 1,
