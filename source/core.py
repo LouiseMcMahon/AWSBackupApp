@@ -100,7 +100,7 @@ def restore(restore_path, timestamp, config, aws, clean = False):
 
                                 bucket_versioning = bucket.Versioning()
                                 if bucket_versioning.status != "Enabled":
-                                    logging.error("Cannot do timestamped restore this is not a versioned bucket")
+                                    logging.error("Cannot do timestamped restore "+ bucket.name +" is not a versioned bucket")
                                     return
 
                                 objects = {}
