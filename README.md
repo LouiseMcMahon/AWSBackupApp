@@ -2,7 +2,7 @@
 The app works with Amazon S3 using versioned buckets to backup and restore files.
 
 ##Features
-* Unix and windows versions.
+* Unix and windows supported.
 * Any file type supported.
 * Easy to restore files.
 * Infrequent Access, Reduced Redundancy and Standard storage classes supported.
