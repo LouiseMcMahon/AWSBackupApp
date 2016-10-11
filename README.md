@@ -16,12 +16,13 @@ A none versioned bucket can be used if you wish to only store the latest version
 The app uses a json config file named `config.json` by default it is in:
 * On windows `%appdata%\amazon-backup\`
 * On Unix `~/.local/share/amazon-backup/`
-The file can be named anything and placed anywhere however and passed in via the `--config` argument
+
+However the file can be named anything and placed anywhere however and passed in via the `--config` argument
 
 **Be aware** the config file is required for restoring files and should be backed up as well. 
 The app can backup its own config files by adding its location like any other folder.
 
-A basic config file structure is this:
+A sample config file structure is bellow:
 
 ```
 {
@@ -78,7 +79,9 @@ can be set via `--errorlog` and `-alllog`.
 By passing `-v` or `--verbose` the app will pass all messages to the console.
 Alternatively `-a` or `--quiet` will make it pass nothing these arguments do not affect the log files which will always be written.
 
-`--apikey` and `--secretkey` can be used to pass your AWS api credentials if none are passed aws configure credentials will be used and if specific creditals are set in the config file for folders they will always be used. If you are running for EC2 IAM roles can be used. 
+`--apikey` and `--secretkey` can be used to pass your AWS api credentials if none are passed aws configure credentials will be used
+ and if specific creditals are set in the config file for folders they will always be used. 
+ If you are running on EC2 IAM roles can be used as normall. 
 
 ### Backing Up
 The above optional arguments relate to all commands and should be passed first then the command `upload` ie `-v --config "path to config file" upload -o`.
@@ -100,4 +103,4 @@ Like with the `upload` command argumenrs like `-v` should be passed first then p
 * File Encryption
 
 ##Pull Requests
-PR's are welcome espcially to add more unit and integration tests but for features please open an issue and check it with us first.
+PR's are welcome espcially to add more unit and integration tests, but for features please open an issue and check it with us first.
